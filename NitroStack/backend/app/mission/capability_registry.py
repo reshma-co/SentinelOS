@@ -120,6 +120,17 @@ INCIDENT_PATTERNS: tuple[IncidentPattern, ...] = (
         ),
         high_severity_keywords=("explosion", "mass exposure", "toxic cloud"),
     ),
+    IncidentPattern(
+        incident_type="power_outage",
+        keywords=("power outage", "blackout", "grid failure", "transformer failure", "electrical outage"),
+        hazards=("loss of power", "traffic signal failure", "communications disruption"),
+        capabilities=(
+            "environmental_risk", "traffic_control", "road_status", "route_planning",
+            "emergency_medical_response", "logistics", "manpower", "public_alert",
+            "emergency_broadcast",
+        ),
+        high_severity_keywords=("citywide", "hospital outage", "grid failure", "critical infrastructure"),
+    ),
 )
 
 SEVERITY_LEVELS = ("low", "medium", "high", "critical", "unknown")

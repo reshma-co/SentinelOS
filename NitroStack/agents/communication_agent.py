@@ -3,28 +3,28 @@ from agents.base_agent import BaseAgent, AgentResult
 
 class CommunicationAgent(BaseAgent):
     def run(self, task: str) -> AgentResult:
+        task_text = task.strip() or "Emergency response"
         message = f"""
-🚨 FLOOD ALERT 🚨
+EMERGENCY ALERT
 
-Location: Kochi
+Task: {task_text}
 
-Heavy rainfall has caused flooding.
-
-Please evacuate immediately using the recommended safe route.
+Follow Mission Commander instructions from local authorities.
+Move away from the affected zone if evacuation is advised.
 
 Nearest Shelter:
 Community Hall, Kochi
 
-Follow instructions from emergency authorities.
+Updates will be broadcast through official emergency channels.
 """
 
         return AgentResult(
             name=self.name,
-            output=message.strip()
+            output=message.strip(),
         )
 
 
 if __name__ == "__main__":
     agent = CommunicationAgent("communication-agent")
-    result = agent.run("Generate flood alert")
+    result = agent.run("Generate emergency alert")
     print(result.output)
