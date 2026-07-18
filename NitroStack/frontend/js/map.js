@@ -1,0 +1,5 @@
+let map; let routeLayer;
+const colors = { incident: '#ff7180', hospital: '#65dda0', shelter: '#b693ff' };
+export function initializeMap(coordinates) { if (!window.L) return; if (map) map.remove(); map = L.map('map', { zoomControl: false, attributionControl: true }).setView(coordinates, 13); L.control.zoom({ position: 'bottomright' }).addTo(map); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map); }
+export function addMarkers(markers = []) { if (!map) return; markers.forEach(marker => L.circleMarker(marker.coordinates, { radius: 8, color: colors[marker.type] || '#50dfda', fillColor: colors[marker.type] || '#50dfda', fillOpacity: .85, weight: 2 }).addTo(map).bindPopup(marker.label)); }
+export function drawRoute(points) { if (!map || !points) return; if (routeLayer) routeLayer.remove(); routeLayer = L.polyline(points, { color: '#50dfda', weight: 4, opacity: .9, dashArray: '7 8' }).addTo(map); map.fitBounds(routeLayer.getBounds(), { padding: [35, 35] }); }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentinelOS — Crisis Coordination</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand"><div class="mark"><span>✦</span></div> SentinelOS</div>
+      <div class="mission-state"><span class="pulse"></span><span class="tiny" id="missionState">Mission ready · awaiting activation</span></div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <section class="card"><div class="eyebrow">01 / Mission selection</div><h2>Choose incident type</h2>
+          <button class="scenario active" data-scenario="flood"><span class="icon">≋</span> Flood Emergency</button>
+          <button class="scenario" data-scenario="earthquake"><span class="icon">◌</span> Earthquake Response</button>
+          <button class="scenario" data-scenario="chemical"><span class="icon">⚗</span> Chemical Leak</button>
+          <button class="scenario" data-scenario="power"><span class="icon">ϟ</span> Power Outage</button>
+          <div class="selected"><span class="eyebrow">Selected mission</span><strong id="selectedName">Flood Emergency</strong><span class="tiny" id="selectedLocation">Kochi, Kerala</span></div>
+          <button class="button start-button" id="startMission">Start flood mission</button>
+        </section>
+        <section class="card"><div class="eyebrow">Live mission status</div><div class="stats">
+          <div class="stat"><span class="tiny">Agencies</span><b id="agencyCount">—</b></div><div class="stat"><span class="tiny">Agents online</span><b id="agentsOnline">—</b></div>
+          <div class="stat"><span class="tiny">Tasks complete</span><b id="tasksComplete">0</b></div><div class="stat"><span class="tiny">Risk level</span><b class="risk" id="riskLevel">—</b></div>
+        </div></section>
+      </aside>
+      <main class="main">
+        <section class="hero"><div class="hero-content"><div><div class="eyebrow">Mission commander / coordinated response</div><h1 id="missionTitle">Flood response, ready to coordinate</h1><p id="missionDescription">Start the mission to coordinate live weather, hospital, police, volunteer, transport, and communication responses.</p></div><span class="badge" id="riskBadge">RISK LEVEL: —</span></div></section>
+        <div class="section-head"><div><div class="eyebrow">02 / Agent activity panel</div><h2>Agent coordination mesh</h2></div><span class="tiny" id="agentConnection">6 agents connected via MCP</span></div>
+        <section class="agent-grid" id="agentGrid" aria-live="polite"></section>
+        <section class="dash"><div><div class="section-head"><div><div class="eyebrow">03 / Organization dashboard</div><h2>Response capacity</h2></div></div><div class="orgs" id="organizationGrid"></div></div>
+          <aside class="card map"><div class="map-label"><div class="eyebrow">Shared operating map</div><b id="mapTitle">Kochi operations area</b></div><div id="map" aria-label="Interactive incident map"></div><div class="map-legend">Markers appear as each response is confirmed</div></aside>
+        </section>
+        <section class="card timeline"><div class="section-head timeline-head"><div><div class="eyebrow">04 / Mission timeline</div><h2>Coordinated actions</h2></div><span class="tiny" id="timelineStatus">Waiting for mission start</span></div><div class="timeline-list" id="timelineList" aria-live="polite"></div></section>
+        <section class="card summary" id="summaryCard" hidden><div class="summary-row"><div><div class="eyebrow accent">05 / Mission summary</div><h2 id="summaryTitle">Unified flood response plan</h2><ul id="summaryList"></ul></div><button class="button" id="report" disabled>Generate incident report →</button></div></section>
+      </main>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
