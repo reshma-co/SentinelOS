@@ -1,36 +1,57 @@
 # Python
 __pycache__/
 *.py[cod]
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-
-# Virtual environments
+*$py.class
+*.so
 .venv/
 venv/
+ENV/
 env/
 
-# Environment files
+# Environment variables
 .env
 .env.*
 !.env.example
 
-# Node
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.nox/
+.hypothesis/
+
+# Logs
+*.log
+logs/
+
+# Node / JS
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build & Distribution
 dist/
 build/
-.next/
+*.egg-info/
+*.egg
 
-# OS/editor
-.DS_Store
-Thumbs.db
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
-
-# Local data and generated artifacts
-data/*
-!data/.gitkeep
-*.log
+# Databases
+*.sqlite3
+*.db

@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "start": "echo SentinelOS"
+        "start": "echo SentinelOS",
+        "debug-env": "node debug-env.js"
+    },
+    "dependencies": {
+        "dotenv": "^17.4.2"
     }
 }
