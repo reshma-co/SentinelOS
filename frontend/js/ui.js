@@ -9,7 +9,7 @@ export function renderAgents(agents) {
 }
 
 export function renderOrganizations(agents) {
-  $('organizationGrid').innerHTML = agents.map((item, index) => `<article class="card org"><div class="org-title"><i style="background:${['var(--cyan)','var(--green)','var(--amber)','var(--violet)','var(--blue)','var(--red)'][index]}"></i>${value(item?.organization, 'Response Organization')}</div><p>${value(item?.description, 'Operational response generated.')}</p><div class="metric">${value(item?.metric, 'Ready')} <small>${value(item?.metricLabel, 'status')}</small></div></article>`).join('');
+  $('organizationGrid').innerHTML = agents.map((item, index) => `<article class="card org"><div class="org-title"><i style="background:${['var(--cyan)', 'var(--green)', 'var(--amber)', 'var(--violet)', 'var(--blue)', 'var(--red)'][index]}"></i>${value(item?.organization, 'Response Organization')}</div><p>${value(item?.description, 'Operational response generated.')}</p><div class="metric">${value(item?.metric, 'Ready')} <small>${value(item?.metricLabel, 'status')}</small></div></article>`).join('');
 }
 
 export function addTimelineEvent({ time, title, detail, number }) {
@@ -21,7 +21,11 @@ export function addTimelineEvent({ time, title, detail, number }) {
 
 export function setMission(mission = {}) {
   const location = value(mission?.location, 'Selected location');
-  const riskLevel = value(mission?.riskLevel, 'UNKNOWN');
+
+  // Fall back to mission?.severity if riskLevel isn't present
+  const rawRisk = mission?.riskLevel ?? mission?.severity ?? 'UNKNOWN';
+  const riskLevel = String(rawRisk).toUpperCase();
+
   const agencies = value(mission?.agencies, 6);
   $('selectedLocation').textContent = location;
   $('missionTitle').textContent = value(mission?.title, 'Emergency response mission');

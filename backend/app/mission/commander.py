@@ -6,9 +6,10 @@ incident type as a default (RULE 1/4). It also never activates every
 organization for every incident (RULE 7) — only the organizations implied
 by the classified required_capabilities are dispatched.
 """
+
 from __future__ import annotations
 
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 import asyncio
 
@@ -28,7 +29,9 @@ from .schemas import (
 OrgHandler = Callable[[MissionContext], Awaitable[OrgResponse]]
 
 
-async def _safe_call(org: str, handler: OrgHandler, context: MissionContext) -> OrgResponse:
+async def _safe_call(
+    org: str, handler: OrgHandler, context: MissionContext
+) -> OrgResponse:
     """Wrap an organization call so one failure never crashes the mission (rule: organizational failures must not crash the mission)."""
     try:
         return await handler(context)
@@ -38,7 +41,9 @@ async def _safe_call(org: str, handler: OrgHandler, context: MissionContext) -> 
             status="error_fallback",
             capabilities_covered=[],
             summary=f"{org} module failed to respond ({type(exc).__name__}); using safe fallback so the mission can proceed.",
-            recommendations=[f"Manually verify {org} status — automated response unavailable"],
+            recommendations=[
+                f"Manually verify {org} status — automated response unavailable"
+            ],
             resources=[],
             raw={"error": str(exc)},
         )
@@ -103,7 +108,12 @@ def generate_mission_plan(
 ) -> list[TimelineStep]:
     """Phase 4: build the mission timeline."""
     steps: list[TimelineStep] = [
-        TimelineStep(step=1, phase="report", description="Incident reported and mission created.", eta_minutes=0),
+        TimelineStep(
+            step=1,
+            phase="report",
+            description="Incident reported and mission created.",
+            eta_minutes=0,
+        ),
         TimelineStep(
             step=2,
             phase="analysis",
@@ -156,7 +166,9 @@ def get_mission_status(mission_id: str) -> dict:
 async def run_mission(mission_input: CreateMissionInput) -> UnifiedMissionResponse:
     """End-to-end Mission Commander flow (Phases 1-6) — the primary entry point."""
     mission: Mission = MissionService.create_mission(mission_input)
-    context: MissionContext = IncidentAnalysisService.analyze_incident(mission.mission_id)
+    context: MissionContext = IncidentAnalysisService.analyze_incident(
+        mission.mission_id
+    )
 
     org_responses = await dispatch_agents(context)
     active_orgs = [r.organization for r in org_responses]

@@ -1,9 +1,10 @@
 import { api } from './api.js';
-import { AGENT_ORDER, WORKFLOW_DELAY_MS } from './config.js';
+import { WORKFLOW_DELAY_MS } from './config.js';
 import { addMarkers, drawRoute, initializeMap } from './map.js';
 import { $, addTimelineEvent, renderAgents, renderOrganizations, setMission, setMissionState, setProgress, setStartButton, showSummary, toast } from './ui.js';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 const scenarioNames = {
   flood: 'Flood Emergency',
   earthquake: 'Earthquake Response',
@@ -11,30 +12,47 @@ const scenarioNames = {
   power: 'Power Outage'
 };
 
-let agentData = [];
+// City Coordinate Lookup
+const cityCoordinates = {
+  chennai: [13.0827, 80.2707],
+  kochi: [9.9312, 76.2673],
+  bengaluru: [12.9716, 77.5946],
+  bangalore: [12.9716, 77.5946],
+  mumbai: [19.0760, 72.8777],
+  delhi: [28.6139, 77.2090]
+};
+
+function getCoordinates(locationName) {
+  if (!locationName) return cityCoordinates.chennai;
+  const key = String(locationName).trim().toLowerCase();
+  for (const [city, coords] of Object.entries(cityCoordinates)) {
+    if (key.includes(city)) return coords;
+  }
+  return cityCoordinates.chennai; // Fallback
+}
+
 let selectedScenario = 'flood';
+let currentMission = null; // Holds the active UnifiedMissionResponse
 
 function time() {
-  return new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' }).format(new Date());
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Kolkata'
+  }).format(new Date());
 }
 
-function agentTitle(key) {
-  return `${key === 'communications' ? 'Comms' : key[0].toUpperCase() + key.slice(1)} Agent`;
-}
-
-function initialAgents() {
-  return AGENT_ORDER.map(key => ({ agent: agentTitle(key), icon: 'o', status: 'READY', action: 'Awaiting Mission Commander' }));
-}
-
-renderAgents(initialAgents());
-
-document.querySelectorAll('.scenario').forEach(button => button.addEventListener('click', () => {
-  selectedScenario = button.dataset.scenario || 'flood';
-  document.querySelectorAll('.scenario').forEach(item => item.classList.remove('active'));
-  button.classList.add('active');
-  $('selectedName').textContent = scenarioNames[selectedScenario] || 'Emergency Mission';
-  setStartButton(false, selectedScenario);
-}));
+// Event Listeners for Scenario Selector
+document.querySelectorAll('.scenario').forEach(button => {
+  button.addEventListener('click', () => {
+    selectedScenario = button.dataset.scenario || 'flood';
+    document.querySelectorAll('.scenario').forEach(item => item.classList.remove('active'));
+    button.classList.add('active');
+    $('selectedName').textContent = scenarioNames[selectedScenario] || 'Emergency Mission';
+    setStartButton(false, selectedScenario);
+  });
+});
 
 $('startMission').addEventListener('click', startMission);
 $('report').addEventListener('click', downloadReport);
@@ -44,54 +62,79 @@ async function startMission() {
   $('summaryCard').hidden = true;
   $('report').disabled = true;
   $('timelineList').innerHTML = '';
-  agentData = [];
+  currentMission = null;
+
   try {
-    const mission = await api.startMission(selectedScenario);
-    setMission(mission);
-    initializeMap(mission?.coordinates || [9.9312, 76.2673]);
-    setMissionState(`Mission active - ${mission?.id || 'coordination running'}`);
-    setProgress(0, AGENT_ORDER.length);
-    addTimelineEvent({ number: 1, time: time(), title: 'Mission started', detail: `Mission Commander activated for ${mission?.location || 'selected location'}` });
-    for (const [index, key] of AGENT_ORDER.entries()) {
-      const current = initialAgents();
-      agentData.forEach((data, completedIndex) => current[completedIndex] = data);
-      current[index] = { agent: agentTitle(key), icon: 'o', status: 'WORKING', action: 'Retrieving operational response...' };
-      renderAgents(current);
-      const data = await api.getAgent(key, selectedScenario);
+    // 1. Call real backend orchestrator
+    const missionData = await api.startMission(selectedScenario);
+    currentMission = missionData; // Store for report download
+
+    // 2. Setup map dynamically using the location returned by backend
+    const coords = getCoordinates(missionData.location);
+    setMission(missionData);
+    initializeMap(coords);
+    setMissionState(`Mission Active - ID: ${missionData.mission_id}`);
+
+    // 3. Process organizational responses
+    const orgResponses = missionData.organization_responses || [];
+    setProgress(0, orgResponses.length);
+
+    addTimelineEvent({
+      number: 1,
+      time: time(),
+      title: 'Mission Commander Dispatched',
+      detail: `Emergency Type: ${missionData.emergency_type} | Location: ${missionData.location}`
+    });
+
+    // 4. Step-by-step UI animation from backend response
+    for (const [index, resp] of orgResponses.entries()) {
       await sleep(WORKFLOW_DELAY_MS);
-      agentData.push(data);
-      renderAgents([...agentData, ...initialAgents().slice(index + 1)]);
-      renderOrganizations(agentData);
-      setProgress(index + 1, AGENT_ORDER.length);
-      if (data?.mapMarkers) addMarkers(data.mapMarkers);
-      if (data?.route) drawRoute(data.route);
+
+      setProgress(index + 1, orgResponses.length);
+
       addTimelineEvent({
         number: index + 2,
         time: time(),
-        title: data?.action || `${agentTitle(key)} completed`,
-        detail: data?.recipients ? `Alert sent to: ${data.recipients.join(', ')}` : (data?.description || 'Response generated')
+        title: `${resp.organization.toUpperCase()} Response Active`,
+        detail: resp.summary
       });
     }
-    const summary = await api.getSummary();
-    showSummary(summary);
-    setMissionState('Mission plan generated - response coordinated');
+
+    // Update agent organization status cards
+    renderOrganizations(orgResponses);
+
+    // 5. Render final summary card
+    showSummary({
+      final_summary: missionData.final_summary,
+      priority_actions: missionData.priority_actions,
+      resource_allocation: missionData.resource_allocation
+    });
+
+    setMissionState('Mission Plan Completed');
     $('timelineStatus').textContent = 'Live response plan complete';
-    toast('Mission plan generated');
+    $('report').disabled = false; // Enable report download
+    toast('Mission plan generated successfully');
+
   } catch (error) {
-    setMissionState('Mission interrupted - retry required');
-    toast('Unable to complete mission. Please retry.');
-    console.error(error);
+    setMissionState('Mission Interrupted');
+    toast('Unable to complete mission. Check backend server.');
+    console.error('Mission Execution Error:', error);
   } finally {
     setStartButton(false, selectedScenario);
   }
 }
 
-async function downloadReport() {
-  const report = await api.getReport();
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
+function downloadReport() {
+  if (!currentMission) {
+    toast('No active mission report to download');
+    return;
+  }
+
+  const blob = new Blob([JSON.stringify(currentMission, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `sentinelos-incident-report-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = `sentinelos-report-${currentMission.mission_id}.json`;
   link.click();
   URL.revokeObjectURL(url);
   toast('Incident report downloaded');
